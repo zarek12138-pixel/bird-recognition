@@ -1,0 +1,935 @@
+/* 全局样式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary-color: #2D6A4F;
+    --primary-light: #40916C;
+    --primary-dark: #1B4332;
+    --secondary-color: #74C69D;
+    --accent-color: #D8F3DC;
+    --text-dark: #1B4332;
+    --text-light: #52796F;
+    --text-muted: #84A98C;
+    --bg-light: #F8F9FA;
+    --bg-white: #FFFFFF;
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
+    --radius: 12px;
+    --radius-lg: 20px;
+    --transition: all 0.3s ease;
+}
+
+body {
+    font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--text-dark);
+    line-height: 1.6;
+    background: var(--bg-white);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* 导航栏 */
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 70px;
+}
+
+.nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.nav-logo i {
+    font-size: 1.8rem;
+}
+
+.nav-links {
+    display: flex;
+    list-style: none;
+    gap: 30px;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: var(--text-light);
+    font-weight: 500;
+    transition: var(--transition);
+    position: relative;
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+    color: var(--primary-color);
+}
+
+.nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--primary-color);
+    transition: var(--transition);
+}
+
+.nav-links a:hover::after,
+.nav-links a.active::after {
+    width: 100%;
+}
+
+/* Hero 区域 */
+.hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, var(--accent-color) 0%, #FFFFFF 50%, #E8F5E9 100%);
+    position: relative;
+    padding: 100px 20px 50px;
+    overflow: hidden;
+}
+
+.hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 80%;
+    height: 150%;
+    background: radial-gradient(ellipse, rgba(45, 106, 79, 0.05) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.hero-content {
+    max-width: 1200px;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: center;
+    z-index: 1;
+}
+
+.hero-text h1 {
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    margin-bottom: 20px;
+    line-height: 1.2;
+}
+
+.hero-subtitle {
+    font-size: 1.25rem;
+    color: var(--text-light);
+    margin-bottom: 40px;
+    line-height: 1.8;
+}
+
+.hero-buttons {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 28px;
+    border-radius: 50px;
+    font-size: 1rem;
+    font-weight: 500;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+    box-shadow: 0 4px 15px rgba(45, 106, 79, 0.3);
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(45, 106, 79, 0.4);
+}
+
+.btn-secondary {
+    background: white;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+}
+
+.btn-secondary:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-outline {
+    background: transparent;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+}
+
+.btn-outline:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-full {
+    width: 100%;
+    justify-content: center;
+}
+
+.btn-icon {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 5px;
+    transition: var(--transition);
+}
+
+.btn-icon:hover {
+    color: var(--text-dark);
+}
+
+/* Hero 视觉元素 */
+.hero-visual {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 400px;
+}
+
+.sound-wave {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 150px;
+}
+
+.wave-bar {
+    width: 8px;
+    background: linear-gradient(to top, var(--primary-color), var(--secondary-color));
+    border-radius: 4px;
+    animation: wave 1.2s ease-in-out infinite;
+}
+
+.wave-bar:nth-child(1) { height: 40%; animation-delay: 0s; }
+.wave-bar:nth-child(2) { height: 70%; animation-delay: 0.1s; }
+.wave-bar:nth-child(3) { height: 100%; animation-delay: 0.2s; }
+.wave-bar:nth-child(4) { height: 60%; animation-delay: 0.3s; }
+.wave-bar:nth-child(5) { height: 80%; animation-delay: 0.4s; }
+.wave-bar:nth-child(6) { height: 50%; animation-delay: 0.5s; }
+.wave-bar:nth-child(7) { height: 90%; animation-delay: 0.6s; }
+.wave-bar:nth-child(8) { height: 45%; animation-delay: 0.7s; }
+
+@keyframes wave {
+    0%, 100% { transform: scaleY(0.5); opacity: 0.5; }
+    50% { transform: scaleY(1); opacity: 1; }
+}
+
+.floating-birds {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.bird-icon {
+    position: absolute;
+    font-size: 2rem;
+    color: var(--primary-light);
+    opacity: 0.6;
+    animation: float 6s ease-in-out infinite;
+}
+
+.bird-1 { top: 10%; left: 10%; animation-delay: 0s; }
+.bird-2 { top: 60%; right: 15%; animation-delay: 2s; }
+.bird-3 { bottom: 20%; left: 20%; animation-delay: 4s; }
+
+@keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(5deg); }
+}
+
+.scroll-indicator {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(10px); }
+}
+
+/* 识别区域 */
+.recognize-section {
+    padding: 100px 0;
+    background: var(--bg-light);
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.section-header h2 {
+    font-size: 2.5rem;
+    color: var(--primary-dark);
+    margin-bottom: 15px;
+}
+
+.section-header p {
+    font-size: 1.1rem;
+    color: var(--text-light);
+}
+
+.recognize-container {
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+/* 上传区域 */
+.upload-area {
+    background: white;
+    border: 3px dashed var(--secondary-color);
+    border-radius: var(--radius-lg);
+    padding: 60px 40px;
+    text-align: center;
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.upload-area:hover,
+.upload-area.dragover {
+    border-color: var(--primary-color);
+    background: var(--accent-color);
+}
+
+.upload-icon {
+    font-size: 4rem;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+}
+
+.upload-content h3 {
+    font-size: 1.5rem;
+    color: var(--text-dark);
+    margin-bottom: 10px;
+}
+
+.upload-content p {
+    color: var(--text-light);
+    margin-bottom: 10px;
+}
+
+.file-types {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 25px;
+}
+
+/* 录音区域 */
+.record-section {
+    text-align: center;
+    margin-top: 30px;
+}
+
+.or-divider {
+    position: relative;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+}
+
+.or-divider::before,
+.or-divider::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 100px;
+    height: 1px;
+    background: var(--secondary-color);
+}
+
+.or-divider::before { right: calc(50% + 20px); }
+.or-divider::after { left: calc(50% + 20px); }
+
+.or-divider span {
+    background: var(--bg-light);
+    padding: 0 15px;
+}
+
+.record-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px 40px;
+    background: white;
+    border: 2px solid var(--primary-color);
+    border-radius: 50px;
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.record-btn:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+.record-btn.recording {
+    background: #E74C3C;
+    border-color: #E74C3C;
+    color: white;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); }
+    50% { box-shadow: 0 0 0 15px rgba(231, 76, 60, 0); }
+}
+
+.recording-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 15px;
+    color: #E74C3C;
+    font-weight: 500;
+}
+
+.recording-dot {
+    width: 12px;
+    height: 12px;
+    background: #E74C3C;
+    border-radius: 50%;
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+/* 音频预览 */
+.audio-preview {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 30px;
+    box-shadow: var(--shadow);
+    margin-top: 30px;
+}
+
+.preview-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--accent-color);
+}
+
+.preview-header i {
+    color: var(--primary-color);
+}
+
+.preview-header span {
+    flex: 1;
+    font-weight: 500;
+    color: var(--text-dark);
+}
+
+.audio-preview audio {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+/* 加载状态 */
+.loading-state {
+    text-align: center;
+    padding: 60px 40px;
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    margin-top: 30px;
+}
+
+.spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid var(--accent-color);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loading-sub {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-top: 10px;
+}
+
+/* 识别结果 */
+.result-container {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 40px;
+    box-shadow: var(--shadow);
+    margin-top: 30px;
+}
+
+.result-container h3 {
+    color: var(--primary-color);
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.result-container h3 i {
+    color: #27AE60;
+}
+
+.result-card {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.bird-image {
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+}
+
+.bird-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.bird-info h4 {
+    font-size: 1.8rem;
+    color: var(--primary-dark);
+    margin-bottom: 5px;
+}
+
+.scientific-name {
+    font-style: italic;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+}
+
+.confidence-bar {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.confidence-fill {
+    flex: 1;
+    height: 10px;
+    background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));
+    border-radius: 5px;
+    transition: width 0.5s ease;
+}
+
+.confidence-text {
+    font-weight: 600;
+    color: var(--primary-color);
+    min-width: 50px;
+}
+
+.bird-description {
+    color: var(--text-light);
+    line-height: 1.8;
+    margin-bottom: 20px;
+}
+
+.bird-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tag {
+    padding: 6px 14px;
+    background: var(--accent-color);
+    color: var(--primary-dark);
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+/* 其他可能 */
+.alternative-results h4 {
+    color: var(--text-dark);
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+}
+
+.alt-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.alt-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px 15px;
+    background: var(--bg-light);
+    border-radius: var(--radius);
+    transition: var(--transition);
+}
+
+.alt-item:hover {
+    background: var(--accent-color);
+}
+
+.alt-rank {
+    width: 28px;
+    height: 28px;
+    background: var(--secondary-color);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.alt-name {
+    flex: 1;
+    font-weight: 500;
+}
+
+.alt-confidence {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+/* 鸟类图鉴 */
+.birds-section {
+    padding: 100px 0;
+    background: white;
+}
+
+.birds-filter {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    padding: 10px 24px;
+    background: white;
+    border: 2px solid var(--secondary-color);
+    border-radius: 50px;
+    color: var(--text-light);
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.filter-btn:hover,
+.filter-btn.active {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+.birds-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 25px;
+}
+
+.bird-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.bird-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-hover);
+}
+
+.bird-card-image {
+    height: 200px;
+    overflow: hidden;
+}
+
+.bird-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: var(--transition);
+}
+
+.bird-card:hover .bird-card-image img {
+    transform: scale(1.05);
+}
+
+.bird-card-content {
+    padding: 20px;
+}
+
+.bird-card-content h4 {
+    color: var(--primary-dark);
+    margin-bottom: 5px;
+}
+
+.bird-card-content .scientific {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    font-style: italic;
+    margin-bottom: 10px;
+}
+
+.bird-card-content p {
+    font-size: 0.95rem;
+    color: var(--text-light);
+    line-height: 1.6;
+}
+
+/* 关于区域 */
+.about-section {
+    padding: 100px 0;
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
+    color: white;
+}
+
+.about-content {
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.about-text h2 {
+    font-size: 2.5rem;
+    margin-bottom: 25px;
+}
+
+.about-text > p {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    opacity: 0.9;
+    margin-bottom: 50px;
+}
+
+.features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+}
+
+.feature {
+    padding: 30px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    backdrop-filter: blur(10px);
+    transition: var(--transition);
+}
+
+.feature:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-5px);
+}
+
+.feature i {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+    opacity: 0.9;
+}
+
+.feature h4 {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+}
+
+.feature p {
+    font-size: 0.95rem;
+    opacity: 0.8;
+    line-height: 1.6;
+}
+
+/* 页脚 */
+.footer {
+    background: var(--primary-dark);
+    color: white;
+    padding: 50px 0 20px;
+}
+
+.footer-content {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.footer-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+}
+
+.footer-logo i {
+    font-size: 1.8rem;
+}
+
+.footer-text {
+    opacity: 0.8;
+    margin-bottom: 20px;
+}
+
+.footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.footer-links a {
+    color: white;
+    font-size: 1.3rem;
+    opacity: 0.7;
+    transition: var(--transition);
+}
+
+.footer-links a:hover {
+    opacity: 1;
+}
+
+.footer-bottom {
+    text-align: center;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.footer-bottom p {
+    opacity: 0.6;
+    font-size: 0.9rem;
+}
+
+/* 响应式设计 */
+@media (max-width: 992px) {
+    .hero-content {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .hero-text h1 {
+        font-size: 2.5rem;
+    }
+
+    .hero-buttons {
+        justify-content: center;
+    }
+
+    .hero-visual {
+        height: 250px;
+    }
+
+    .result-card {
+        grid-template-columns: 1fr;
+    }
+
+    .bird-image {
+        height: 200px;
+    }
+
+    .features {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .nav-links {
+        display: none;
+    }
+
+    .hero {
+        padding-top: 80px;
+    }
+
+    .hero-text h1 {
+        font-size: 2rem;
+    }
+
+    .section-header h2 {
+        font-size: 1.8rem;
+    }
+
+    .upload-area {
+        padding: 40px 20px;
+    }
+
+    .result-container {
+        padding: 25px;
+    }
+
+    .birds-grid {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,0 +1,2086 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>鸟鸣识鸟 - AI鸟类叫声识别</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root {
+  --primary: #1a5f4a;
+  --primary-light: #2d8a6e;
+  --primary-dark: #0d3d2f;
+  --accent: #e8f5e9;
+  --accent-light: #c8e6c9;
+  --text-dark: #1a1a1a;
+  --text-medium: #4a4a4a;
+  --text-light: #7a7a7a;
+  --bg-light: #f8faf8;
+  --white: #ffffff;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
+  --shadow-md: 0 8px 30px rgba(0,0,0,0.08);
+  --shadow-lg: 0 20px 60px rgba(0,0,0,0.12);
+  --radius: 16px;
+  --radius-lg: 24px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Noto Sans SC', sans-serif;
+  color: var(--text-dark);
+  background: var(--bg-light);
+  overflow-x: hidden;
+}
+
+/* ===== 粒子背景 ===== */
+#particles-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ===== 飘落的彩色羽毛 ===== */
+.feather-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.feather {
+  position: absolute;
+  top: -60px;
+  font-size: 24px;
+  opacity: 0.7;
+  animation: feather-fall linear infinite;
+}
+
+@keyframes feather-fall {
+  0% {
+    transform: translateY(0) rotate(0deg) translateX(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.8;
+  }
+  90% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(110vh) rotate(720deg) translateX(100px);
+    opacity: 0;
+  }
+}
+
+/* 不同颜色的羽毛 */
+.feather-red { color: #e74c3c; }
+.feather-blue { color: #3498db; }
+.feather-green { color: #27ae60; }
+.feather-yellow { color: #f1c40f; }
+.feather-purple { color: #9b59b6; }
+.feather-orange { color: #e67e22; }
+.feather-pink { color: #fd79a8; }
+.feather-cyan { color: #00cec9; }
+.feather-gold { color: #ffd700; }
+.feather-lime { color: #a8e6cf; }
+
+/* ===== 导航栏 ===== */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  padding: 16px 0;
+  transition: all 0.4s ease;
+}
+
+.navbar.scrolled {
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(20px);
+  box-shadow: var(--shadow-sm);
+  padding: 12px 0;
+}
+
+.nav-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary);
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.nav-logo:hover { transform: scale(1.05); }
+.nav-logo i {
+  font-size: 1.8rem;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.nav-links {
+  display: flex;
+  list-style: none;
+  gap: 8px;
+}
+
+.nav-links a {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border-radius: 50px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-medium);
+  transition: all 0.3s ease;
+  text-decoration: none;
+  border: none;
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent-light));
+  color: var(--primary);
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+  color: var(--primary);
+}
+
+/* ===== Hero 区域 ===== */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  padding: 120px 24px 80px;
+  text-align: center;
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 30%, #a5d6a7 70%, #81c784 100%);
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  width: 800px;
+  height: 800px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, transparent 70%);
+  top: -200px;
+  right: -200px;
+  animation: pulse 8s ease-in-out infinite;
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+  bottom: -100px;
+  left: -100px;
+  animation: pulse 10s ease-in-out infinite reverse;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.1); opacity: 0.8; }
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+  max-width: 800px;
+}
+
+.hero h1 {
+  font-size: 4rem;
+  font-weight: 800;
+  margin-bottom: 20px;
+  line-height: 1.1;
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 50%, var(--primary-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: fadeInUp 1s ease;
+}
+
+.hero-subtitle {
+  font-size: 1.3rem;
+  color: var(--text-medium);
+  margin-bottom: 40px;
+  line-height: 1.8;
+  animation: fadeInUp 1s ease 0.2s both;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  animation: fadeInUp 1s ease 0.4s both;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== 按钮样式 ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 36px;
+  border-radius: 50px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  color: white;
+  box-shadow: 0 8px 25px rgba(26, 95, 74, 0.35);
+}
+
+.btn-primary:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 15px 40px rgba(26, 95, 74, 0.45);
+}
+
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255,255,255,0.2);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn-primary:active::after {
+  width: 300px;
+  height: 300px;
+}
+
+.btn-secondary {
+  background: white;
+  color: var(--primary);
+  border: 2px solid var(--accent-light);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-secondary:hover {
+  background: var(--accent);
+  border-color: var(--primary-light);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-ghost {
+  background: rgba(26, 95, 74, 0.08);
+  color: var(--primary);
+}
+
+.btn-ghost:hover {
+  background: var(--accent);
+}
+
+.btn-sm {
+  padding: 12px 24px;
+  font-size: 0.9rem;
+}
+
+/* ===== 识别区域 ===== */
+.section {
+  padding: 100px 0;
+  position: relative;
+}
+
+.section-alt {
+  background: var(--white);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.section-header h2 {
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin-bottom: 16px;
+  position: relative;
+  display: inline-block;
+}
+
+.section-header h2::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary), var(--primary-light));
+  border-radius: 2px;
+}
+
+.section-header p {
+  color: var(--text-light);
+  font-size: 1.1rem;
+  margin-top: 24px;
+}
+
+/* ===== 卡片 ===== */
+.card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 48px;
+  max-width: 720px;
+  margin: 0 auto;
+  transition: all 0.4s ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+/* ===== 上传区域 ===== */
+.upload-area {
+  border: 3px dashed var(--accent-light);
+  border-radius: var(--radius-lg);
+  padding: 60px 40px;
+  text-align: center;
+  transition: all 0.4s ease;
+  cursor: pointer;
+  position: relative;
+  background: linear-gradient(135deg, rgba(232,245,233,0.5) 0%, rgba(255,255,255,0.8) 100%);
+}
+
+.upload-area:hover,
+.upload-area.dragover {
+  border-color: var(--primary);
+  background: linear-gradient(135deg, rgba(232,245,233,0.8) 0%, rgba(255,255,255,0.95) 100%);
+  transform: scale(1.01);
+}
+
+.upload-icon {
+  font-size: 4.5rem;
+  color: var(--primary);
+  margin-bottom: 24px;
+  display: inline-block;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+.upload-area h3 {
+  font-size: 1.4rem;
+  color: var(--text-dark);
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.upload-area p {
+  color: var(--text-light);
+  margin-bottom: 8px;
+  font-size: 1rem;
+}
+
+.file-types {
+  color: var(--text-light);
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.hidden { display: none !important; }
+
+/* ===== 音频预览 ===== */
+.audio-preview {
+  margin-top: 32px;
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.preview-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--accent-light);
+}
+
+.preview-header i {
+  color: var(--primary);
+  font-size: 1.2rem;
+}
+
+.preview-header span {
+  flex: 1;
+  font-weight: 500;
+  font-size: 1rem;
+  color: var(--text-dark);
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  color: var(--text-light);
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 8px 12px;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+.btn-icon:hover {
+  background: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
+  transform: rotate(90deg);
+}
+
+audio {
+  width: 100%;
+  margin-bottom: 24px;
+  border-radius: 10px;
+}
+
+audio::-webkit-media-controls-panel {
+  background: var(--accent);
+}
+
+/* ===== 加载状态 ===== */
+.loading-state {
+  text-align: center;
+  padding: 80px 40px;
+  animation: fadeIn 0.5s ease;
+}
+
+.spinner-container {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 30px;
+}
+
+.spinner {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 4px solid var(--accent-light);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.spinner-inner {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  border: 3px solid var(--accent);
+  border-bottom-color: var(--primary-light);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite reverse;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-state p {
+  font-weight: 600;
+  color: var(--text-dark);
+  font-size: 1.2rem;
+}
+
+.loading-sub {
+  color: var(--text-light);
+  font-size: 1rem;
+  margin-top: 12px;
+}
+
+/* ===== 识别结果 ===== */
+.result-container {
+  margin-top: 40px;
+  animation: fadeIn 0.6s ease;
+}
+
+.result-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 32px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid var(--accent);
+}
+
+.result-header i {
+  color: #27ae60;
+  font-size: 1.8rem;
+}
+
+.result-header h3 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.result-card {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 40px;
+  margin-bottom: 32px;
+}
+
+.bird-image {
+  border-radius: var(--radius);
+  overflow: hidden;
+  position: relative;
+  height: 220px;
+  box-shadow: var(--shadow-md);
+}
+
+.bird-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+.bird-image:hover img {
+  transform: scale(1.1);
+}
+
+.bird-info h4 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin-bottom: 6px;
+}
+
+.scientific {
+  font-style: italic;
+  color: var(--text-light);
+  font-size: 1rem;
+  margin-bottom: 20px;
+}
+
+.confidence-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.confidence-bar {
+  height: 14px;
+  background: var(--accent);
+  border-radius: 7px;
+  overflow: hidden;
+  flex: 1;
+}
+
+.confidence-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary-light), var(--primary));
+  border-radius: 7px;
+  transition: width 1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.confidence-text {
+  font-weight: 700;
+  color: var(--primary);
+  font-size: 1.2rem;
+  min-width: 60px;
+}
+
+.bird-description {
+  color: var(--text-medium);
+  line-height: 1.9;
+  margin-bottom: 20px;
+  font-size: 1rem;
+}
+
+.bird-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tag {
+  padding: 8px 18px;
+  background: var(--accent);
+  color: var(--primary);
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.tag:hover {
+  background: var(--primary);
+  color: white;
+  transform: translateY(-2px);
+}
+
+.result-actions {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* ===== 图鉴区域 ===== */
+.birds-filter {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 50px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  padding: 12px 28px;
+  background: var(--white);
+  border: 2px solid var(--accent-light);
+  border-radius: 50px;
+  color: var(--text-medium);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.filter-btn:hover {
+  border-color: var(--primary-light);
+  background: var(--accent);
+  transform: translateY(-2px);
+}
+
+.filter-btn.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  box-shadow: 0 6px 20px rgba(26, 95, 74, 0.3);
+}
+
+.birds-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 32px;
+}
+
+.bird-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
+  position: relative;
+}
+
+.bird-card:hover {
+  transform: translateY(-12px) scale(1.02);
+  box-shadow: var(--shadow-lg);
+}
+
+.bird-card-img {
+  height: 220px;
+  overflow: hidden;
+  position: relative;
+}
+
+.bird-card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+.bird-card:hover .bird-card-img img {
+  transform: scale(1.15);
+}
+
+.bird-card-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  padding: 8px 16px;
+  background: rgba(26, 95, 74, 0.9);
+  color: white;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  backdrop-filter: blur(4px);
+}
+
+.bird-card-body {
+  padding: 24px;
+}
+
+.bird-card-body h4 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin-bottom: 6px;
+}
+
+.bird-card-body .scientific {
+  margin-bottom: 12px;
+  font-size: 0.95rem;
+}
+
+.bird-card-body p {
+  font-size: 0.95rem;
+  color: var(--text-medium);
+  line-height: 1.7;
+  margin-bottom: 16px;
+}
+
+.bird-card-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--primary);
+  transition: gap 0.3s ease;
+}
+
+.bird-card:hover .bird-card-link {
+  gap: 12px;
+}
+
+/* ===== 历史区域 ===== */
+.history-list {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 20px 28px;
+  margin-bottom: 16px;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+  box-shadow: var(--shadow-sm);
+}
+
+.history-item:hover {
+  border-color: var(--accent-light);
+  box-shadow: var(--shadow-md);
+  transform: translateX(8px);
+}
+
+.history-rank {
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.history-info {
+  flex: 1;
+}
+
+.history-info h4 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 4px;
+}
+
+.history-info p {
+  font-size: 0.9rem;
+  color: var(--text-light);
+}
+
+.history-confidence {
+  font-weight: 700;
+  color: var(--primary);
+  font-size: 1.3rem;
+}
+
+.history-item {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.history-item:hover {
+  background: var(--accent);
+  transform: translateX(5px);
+}
+
+.history-delete {
+  background: none;
+  border: none;
+  color: #e74c3c;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  font-size: 1.1rem;
+  opacity: 0;
+  margin-left: 10px;
+}
+
+.history-item:hover .history-delete {
+  opacity: 1;
+}
+
+.history-delete:hover {
+  background: #e74c3c;
+  color: white;
+}
+
+.history-empty {
+  text-align: center;
+  color: var(--text-light);
+  padding: 80px 0;
+  font-size: 1.1rem;
+}
+
+.history-empty i {
+  font-size: 4rem;
+  margin-bottom: 20px;
+  opacity: 0.5;
+}
+
+/* ===== 页脚 ===== */
+.footer {
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+  color: white;
+  padding: 80px 0 30px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary-light), var(--accent-light), var(--primary-light));
+}
+
+.footer-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.footer-logo i {
+  font-size: 2rem;
+  animation: float 3s ease-in-out infinite;
+}
+
+.footer-text {
+  opacity: 0.8;
+  margin-bottom: 30px;
+  font-size: 1.1rem;
+}
+
+.footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 40px;
+}
+
+.footer-links a {
+  color: white;
+  font-size: 1.5rem;
+  opacity: 0.7;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+}
+
+.footer-links a:hover {
+  opacity: 1;
+  background: rgba(255,255,255,0.2);
+  transform: translateY(-4px);
+}
+
+.footer-bottom {
+  padding-top: 24px;
+  border-top: 1px solid rgba(255,255,255,0.15);
+  font-size: 0.95rem;
+  opacity: 0.6;
+}
+
+/* ===== 弹窗 ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(8px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  max-width: 700px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  transform: scale(0.9) translateY(20px);
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 30px 80px rgba(0,0,0,0.3);
+}
+
+.modal-overlay.active .modal {
+  transform: scale(1) translateY(0);
+}
+
+.modal-close {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  background: rgba(0,0,0,0.05);
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-medium);
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.modal-close:hover {
+  background: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
+  transform: rotate(90deg);
+}
+
+.modal-img {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+}
+
+.modal-content {
+  padding: 36px;
+}
+
+.modal h3 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin-bottom: 6px;
+}
+
+.modal .scientific {
+  margin-bottom: 20px;
+}
+
+.modal-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.modal p {
+  color: var(--text-medium);
+  line-height: 1.9;
+  margin-bottom: 24px;
+  font-size: 1.05rem;
+}
+
+.wiki-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  color: white;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 6px 20px rgba(26, 95, 74, 0.3);
+}
+
+.wiki-link:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(26, 95, 74, 0.4);
+}
+
+/* ===== 响应式 ===== */
+@media (max-width: 900px) {
+  .hero h1 { font-size: 2.8rem; }
+  .result-card { grid-template-columns: 1fr; }
+  .bird-image { height: 280px; }
+  .section-header h2 { font-size: 2.2rem; }
+}
+
+@media (max-width: 600px) {
+  .hero h1 { font-size: 2.2rem; }
+  .hero-subtitle { font-size: 1rem; }
+  .nav-links a { padding: 8px 14px; font-size: 0.85rem; }
+  .card { padding: 32px 24px; }
+  .upload-area { padding: 40px 24px; }
+  .birds-grid { grid-template-columns: 1fr; }
+  .btn { padding: 14px 28px; font-size: 0.95rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- 粒子背景 -->
+<canvas id="particles-canvas"></canvas>
+
+<!-- 飘落的彩色羽毛 -->
+<div class="feather-container" id="featherContainer"></div>
+
+<!-- 导航栏 -->
+<nav class="navbar" id="navbar">
+  <div class="nav-container">
+    <div class="nav-logo" onclick="scrollToSection('home')">
+      <i class="fas fa-dove"></i>
+      <span>鸟鸣识鸟</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="#home" class="active" onclick="scrollToSection('home')">首页</a></li>
+      <li><a href="#recognize" onclick="scrollToSection('recognize')">识别</a></li>
+      <li><a href="#birds" onclick="scrollToSection('birds')">图鉴</a></li>
+      <li><a href="#history" onclick="scrollToSection('history')">历史</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- Hero 区域 -->
+<section id="home" class="hero">
+  <div class="hero-content">
+    <h1>聆听自然的声音</h1>
+    <p class="hero-subtitle">上传鸟鸣音频，AI 智能识别鸟类品种<br>探索大自然的美妙乐章</p>
+    <div class="hero-buttons">
+      <button class="btn btn-primary" onclick="scrollToSection('recognize')">
+        <i class="fas fa-microphone"></i> 开始识别
+      </button>
+      <button class="btn btn-secondary" onclick="scrollToSection('birds')">
+        <i class="fas fa-book-open"></i> 浏览图鉴
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- 识别区域 -->
+<section id="recognize" class="section section-alt">
+  <div class="container">
+    <div class="section-header">
+      <h2>鸟类叫声识别</h2>
+      <p>上传音频文件，AI 将为您识别鸟类品种</p>
+    </div>
+    <div class="card">
+      <!-- 上传区域 -->
+      <div class="upload-area" id="uploadArea">
+        <i class="fas fa-cloud-upload-alt upload-icon"></i>
+        <h3>点击或拖拽音频文件到此处</h3>
+        <p>支持 MP3、WAV、OGG、M4A 格式</p>
+        <span class="file-types">文件大小建议不超过 20MB</span>
+        <input type="file" id="audioInput" accept="audio/*" style="display:none">
+        <br><br>
+        <button class="btn btn-ghost" onclick="event.stopPropagation(); document.getElementById('audioInput').click();">
+          <i class="fas fa-folder-open"></i> 选择文件
+        </button>
+      </div>
+      
+      <!-- 音频预览 -->
+      <div class="audio-preview hidden" id="audioPreview">
+        <div class="preview-header">
+          <i class="fas fa-music"></i>
+          <span id="fileName">audio.mp3</span>
+          <button class="btn-icon" id="removeAudio" title="移除文件">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <audio controls id="audioPlayer"></audio>
+        <button class="btn btn-primary" id="recognizeBtn" style="width:100%">
+          <i class="fas fa-magic"></i> 开始识别
+        </button>
+      </div>
+      
+      <!-- 加载状态 -->
+      <div class="loading-state hidden" id="loadingState">
+        <div class="spinner-container">
+          <div class="spinner"></div>
+          <div class="spinner-inner"></div>
+        </div>
+        <p>正在分析音频...</p>
+        <p class="loading-sub">AI 正在聆听并识别鸟类叫声</p>
+      </div>
+      
+      <!-- 识别结果 -->
+      <div class="result-container hidden" id="resultContainer">
+        <div class="result-header">
+          <i class="fas fa-check-circle"></i>
+          <h3>识别结果</h3>
+        </div>
+        <div class="result-card">
+          <div class="bird-image">
+            <img id="resultImage" src="" alt="鸟类图片">
+          </div>
+          <div class="bird-info">
+            <h4 id="birdName">--</h4>
+            <p class="scientific" id="scientificName">--</p>
+            <div class="confidence-row">
+              <div class="confidence-bar">
+                <div class="confidence-fill" id="confidenceFill" style="width:0%"></div>
+              </div>
+              <span class="confidence-text" id="confidenceText">0%</span>
+            </div>
+            <p class="bird-description" id="birdDescription">--</p>
+            <div class="bird-tags" id="birdTags"></div>
+          </div>
+        </div>
+        <div class="result-actions">
+          <button class="btn btn-primary btn-sm" onclick="resetIdentification()">
+            <i class="fas fa-redo"></i> 重新识别
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="openBirdModal(currentBirdId)">
+            <i class="fas fa-info-circle"></i> 查看详情
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="scrollToSection('birds')">
+            <i class="fas fa-book-open"></i> 浏览图鉴
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 图鉴区域 -->
+<section id="birds" class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2>常见鸟类图鉴</h2>
+      <p>了解这些常见鸟类的特征和叫声，点击卡片查看详细介绍</p>
+    </div>
+    <div class="birds-filter" id="birdsFilter"></div>
+    <div class="birds-grid" id="birdsGrid"></div>
+  </div>
+</section>
+
+<!-- 历史区域 -->
+<section id="history" class="section section-alt">
+  <div class="container">
+    <div class="section-header">
+      <h2>识别历史</h2>
+      <p>查看过往的识别记录</p>
+    </div>
+    <div class="history-list" id="historyList">
+    </div>
+    <div style="text-align:center; margin-top:32px;">
+      <button class="btn btn-ghost btn-sm hidden" id="clearHistoryBtn" onclick="clearHistory()">
+        <i class="fas fa-trash"></i> 清空历史
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- 页脚 -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-logo">
+      <i class="fas fa-dove"></i>
+      <span>鸟鸣识鸟</span>
+    </div>
+    <p class="footer-text">聆听自然，探索生命的美好</p>
+    <div class="footer-links">
+      <a href="#" title="GitHub"><i class="fab fa-github"></i></a>
+      <a href="#" title="联系我们"><i class="fas fa-envelope"></i></a>
+      <a href="#" title="关于我们"><i class="fas fa-info-circle"></i></a>
+    </div>
+    <p class="footer-bottom">&copy; 2024 鸟类叫声识别系统 · Bird Sound Recognition</p>
+  </div>
+</footer>
+
+<!-- 鸟类详情弹窗 -->
+<div class="modal-overlay" id="birdModal" onclick="closeModalOnOverlay(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">
+      <i class="fas fa-times"></i>
+    </button>
+    <img class="modal-img" id="modalImg" src="" alt="">
+    <div class="modal-content">
+      <h3 id="modalName"></h3>
+      <p class="scientific" id="modalSci"></p>
+      <div class="modal-tags" id="modalTags"></div>
+      <p id="modalDesc"></p>
+      <a id="modalWiki" href="#" target="_blank" class="wiki-link">
+        <i class="fab fa-wikipedia-w"></i> 查看维基百科详细介绍
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ 鸟类数据库 ============
+const birdsDatabase = [
+  {
+    id: 1,
+    name: "麻雀",
+    scientificName: "Passer domesticus",
+    category: "songbird",
+    description: "麻雀是中国最常见的城市鸟类之一，体型小巧，叫声清脆悦耳。它们适应力极强，常成群活动，以谷物和昆虫为食。雄鸟繁殖期喉部黑色，雌鸟较淡。",
+    tags: ["常见", "城市", "群居"],
+    wiki: "https://zh.wikipedia.org/wiki/%E9%BA%BB%E9%9B%80",
+    image: "https://images.unsplash.com/photo-1552728089-57bdde30beb8?w=600&h=400&fit=crop"
+  },
+  {
+    id: 2,
+    name: "喜鹊",
+    scientificName: "Pica pica",
+    category: "songbird",
+    description: "喜鹊黑白相间，尾巴修长如燕尾，叫声洪亮。在中国文化中象征吉祥，民间有'喜鹊报喜'的说法。它们智商极高，能识别人脸。",
+    tags: ["吉祥", "聪明", "黑白"],
+    wiki: "https://zh.wikipedia.org/wiki/%E5%96%9C%E9%B9%A6",
+    image: "https://images.unsplash.com/photo-1511793307447-39a70fce47f1?w=600&h=400&fit=crop"
+  },
+  {
+    id: 3,
+    name: "大杜鹃",
+    scientificName: "Cuculus canorus",
+    category: "songbird",
+    description: "大杜鹃就是俗称的'布谷鸟'，以独特的'布谷—布谷—'叫声闻名。它们是典型的巢寄生鸟类，自己不筑巢，而将卵产在其他小鸟的巢中。",
+    tags: ["春鸟", "寄生", "独特叫声"],
+    wiki: "https://zh.wikipedia.org/wiki/%E5%A4%A7%E6%9D%9C%E9%B9%83",
+    image: "https://images.unsplash.com/photo-1444469084074-bae5cfec422e?w=600&h=400&fit=crop"
+  },
+  {
+    id: 4,
+    name: "大斑啄木鸟",
+    scientificName: "Dendrocopos major",
+    category: "woodpecker",
+    description: "大斑啄木鸟是森林中的'医生'，以快速啄击树干捕捉害虫而闻名。雄鸟后脑有一块红斑，雌鸟则没有。它们的舌头极长，能伸缩自如。",
+    tags: ["森林医生", "啄木声", "益鸟"],
+    wiki: "https://zh.wikipedia.org/wiki/%E5%A4%A7%E6%96%91%E5%87%80%E6%9C%A8%E9%B8%9F",
+    image: "https://images.unsplash.com/photo-1549608541-6cbd23f47a13?w=600&h=400&fit=crop"
+  },
+  {
+    id: 5,
+    name: "家燕",
+    scientificName: "Hirundo rustica",
+    category: "songbird",
+    description: "家燕是最著名的候鸟之一，每年春季从南方飞回北方繁殖。它们尾巴深叉如剪刀，飞行技巧高超，以空中昆虫为食。常在人类屋檐下用泥丸筑巢。",
+    tags: ["飞行高手", "益鸟", "迁徙"],
+    wiki: "https://zh.wikipedia.org/wiki/%E5%AE%B6%E7%87%95",
+    image: "https://images.unsplash.com/photo-1497206365907-f5e630665737?w=600&h=400&fit=crop"
+  },
+  {
+    id: 6,
+    name: "白头鹎",
+    scientificName: "Pycnonotus sinensis",
+    category: "songbird",
+    description: "白头鹎又称'白头翁'，因头顶枕部白色而得名。它们是南方城市中最常见的鸟类之一，叫声多变悦耳，杂食性，秋冬季节常集结成大群活动。",
+    tags: ["城市", "白头", "鸣叫"],
+    wiki: "https://zh.wikipedia.org/wiki/%E7%99%BD%E5%A4%B4%E9%B9%92",
+    image: "https://images.unsplash.com/photo-1504208435786-e902cd804e3c?w=600&h=400&fit=crop"
+  },
+  {
+    id: 7,
+    name: "白鹭",
+    scientificName: "Egretta garzetta",
+    category: "water",
+    description: "白鹭全身洁白如雪，姿态优雅，细长的腿和颈部是它们的标志。它们常在湿地、水田中觅食鱼类和蛙类，是中国湿地生态系统中的重要指示物种。",
+    tags: ["优雅", "白色", "湿地"],
+    wiki: "https://zh.wikipedia.org/wiki/%E7%99%BD%E9%B9%AD",
+    image: "https://images.unsplash.com/photo-1578662996442-48f60103e01e?w=600&h=400&fit=crop"
+  },
+  {
+    id: 8,
+    name: "普通翠鸟",
+    scientificName: "Alcedo atthis",
+    category: "water",
+    description: "普通翠鸟背部呈鲜艳的金属蓝色，腹部为亮橙色，是鸟类世界中的'色彩之王'。它们常栖息于水边的树枝上，发现猎物后以箭般的速度潜水捕鱼。",
+    tags: ["鲜艳", "捕鱼", "快速"],
+    wiki: "https://zh.wikipedia.org/wiki/%E6%99%AE%E9%80%9A%E7%BF%A0%E9%B8%9F",
+    image: "https://images.unsplash.com/photo-1585114589259-3ccfe31d3dea?w=600&h=400&fit=crop"
+  },
+  {
+    id: 9,
+    name: "苍鹰",
+    scientificName: "Accipiter gentilis",
+    category: "raptor",
+    description: "苍鹰是大型猛禽，翅膀短而圆，极其适合在森林中灵活追逐猎物。它们的视力是人类的8倍，能从高空精准锁定地面上的猎物。",
+    tags: ["猛禽", "力量", "高山"],
+    wiki: "https://zh.wikipedia.org/wiki/%E8%8B%8D%E9%B9%B0",
+    image: "https://images.unsplash.com/photo-1586986579380-6d44cc75cad6?w=600&h=400&fit=crop"
+  },
+  {
+    id: 10,
+    name: "欧亚夜莺",
+    scientificName: "Luscinia megarhynchos",
+    category: "songbird",
+    description: "欧亚夜莺以美妙动人的歌声闻名于世，尤其在夜间鸣叫时格外动听。它们是小型迁徙鸟类，夏季在欧洲繁殖，冬季南迁至非洲。",
+    tags: ["歌王", "夜间", "美妙"],
+    wiki: "https://zh.wikipedia.org/wiki/%E5%A4%9C%E8%8E%BA",
+    image: "https://images.unsplash.com/photo-1509177749039-a09bf82c6aa8?w=600&h=400&fit=crop"
+  },
+  {
+    id: 11,
+    name: "大嘴乌鸦",
+    scientificName: "Corvus macrorhynchos",
+    category: "songbird",
+    description: "大嘴乌鸦是鸦科鸟类中体型较大的一种，全身黑色带有紫色光泽。它们的智商在所有鸟类中名列前茅，能够使用工具、解决复杂问题。",
+    tags: ["聪明", "黑色", "工具使用"],
+    wiki: "https://zh.wikipedia.org/wiki/%E5%A4%A7%E5%98%B4%E4%B9%8C%E9%B8%A6",
+    image: "https://images.unsplash.com/photo-1552728089-57bdde30beb8?w=600&h=400&fit=crop"
+  },
+  {
+    id: 12,
+    name: "黑枕黄鹂",
+    scientificName: "Oriolus chinensis",
+    category: "songbird",
+    description: "黑枕黄鹂羽毛金黄与黑色相间，在阳光照射下闪闪发光，被誉为'林中舞蹈家'。它们的叫声清脆婉转如笛声，常隐藏在茂密的树叶间。",
+    tags: ["金黄", "婉转", "名鸟"],
+    wiki: "https://zh.wikipedia.org/wiki/%E9%BB%91%E6%9E%95%E9%BB%84%E9%B9%92",
+    image: "https://images.unsplash.com/photo-1504695377751-83c62543e74b?w=600&h=400&fit=crop"
+  },
+  {
+    id: 13,
+    name: "画眉",
+    scientificName: "Garrulax canorus",
+    category: "songbird",
+    description: "画眉是中国著名的传统笼养鸟，因眼周有一圈白色眉纹如同画眉而得名。它们的歌声悠扬动听、变化多端，能与多种鸟类'对歌'。",
+    tags: ["鸣禽", "歌喉", "笼鸟"],
+    wiki: "https://zh.wikipedia.org/wiki/%E7%94%BB%E7%9C%89",
+    image: "https://images.unsplash.com/photo-1596864419769-1eebba1ef348?w=600&h=400&fit=crop"
+  },
+  {
+    id: 14,
+    name: "八哥",
+    scientificName: "Acridotheres cristatellus",
+    category: "songbird",
+    description: "八哥通体黑色，额前有一簇耸立的羽冠，是极佳的宠物鸟。它们善于模仿其他鸟类的叫声，经过训练甚至能模仿人说话。",
+    tags: ["模仿", "聪明", "黑色"],
+    wiki: "https://zh.wikipedia.org/wiki/%E5%85%AB%E5%93%A5",
+    image: "https://images.unsplash.com/photo-1548584600-ceb5f02ea44e?w=600&h=400&fit=crop"
+  },
+  {
+    id: 15,
+    name: "鸳鸯",
+    scientificName: "Aix galericulata",
+    category: "water",
+    description: "鸳鸯是中国著名的观赏水鸟，雄鸟羽毛绚丽多彩，双翅有一对醒目的扇形橙黄色饰羽；雌鸟则通体褐色斑驳。鸳鸯常被视为爱情和忠贞的象征。",
+    tags: ["绚丽", "爱情", "水禽"],
+    wiki: "https://zh.wikipedia.org/wiki/%E9%B8%B3%E9%B8%AF",
+    image: "https://images.unsplash.com/photo-1504206365907-f5e630665737?w=600&h=400&fit=crop"
+  },
+  {
+    id: 16,
+    name: "丹顶鹤",
+    scientificName: "Grus japonensis",
+    category: "water",
+    description: "丹顶鹤是中国国家一级保护动物，头顶有一块鲜红色的裸露皮肤，因而得名。它们姿态极其优雅高贵，在东亚文化中是长寿、吉祥和忠贞的象征。",
+    tags: ["珍稀", "优雅", "长寿"],
+    wiki: "https://zh.wikipedia.org/wiki/%E4%B8%B9%E9%A1%B6%E9%B9%A4",
+    image: "https://images.unsplash.com/photo-1531046875928-84c6419385b7?w=600&h=400&fit=crop"
+  },
+  {
+    id: 17,
+    name: "红嘴蓝鹊",
+    scientificName: "Urocissa erythroryncha",
+    category: "songbird",
+    description: "红嘴蓝鹊是雀形目中尾羽最长的鸟类之一，中央尾羽可超过体长的两倍。它们羽毛蓝灰相间，嘴和脚均为鲜艳的红色，叫声嘈杂响亮。",
+    tags: ["长尾", "蓝灰色", "美丽"],
+    wiki: "https://zh.wikipedia.org/wiki/%E7%BA%A2%E5%98%B4%E8%93%9D%E9%B9%8A",
+    image: "https://images.unsplash.com/photo-1504208435786-e902cd804e3c?w=600&h=400&fit=crop"
+  },
+  {
+    id: 18,
+    name: "普通鸬鹚",
+    scientificName: "Phalacrocorax carbo",
+    category: "water",
+    description: "普通鸬鹚是大型水鸟，善于潜水捕鱼，常成群栖息在沿岸岩石或树上。它们的一个标志性行为是展开双翅晾晒羽毛。",
+    tags: ["捕鱼", "潜水", "群居"],
+    wiki: "https://zh.wikipedia.org/wiki/%E8%92%BC%E9%B9%AC",
+    image: "https://images.unsplash.com/photo-1578662996442-48f60103e01e?w=600&h=400&fit=crop"
+  },
+  {
+    id: 19,
+    name: "金雕",
+    scientificName: "Aquila chrysaetos",
+    category: "raptor",
+    description: "金雕是顶级猛禽，翅膀展开可达2.3米，飞行速度每小时可达320公里。它们栖息于高山和草原地带，以中型哺乳动物为食。",
+    tags: ["猛禽", "大型", "高山"],
+    wiki: "https://zh.wikipedia.org/wiki/%E9%87%91%E9%9B%95",
+    image: "https://images.unsplash.com/photo-1586986579380-6d44cc75cad6?w=600&h=400&fit=crop"
+  },
+  {
+    id: 20,
+    name: "戴胜",
+    scientificName: "Upupa epops",
+    category: "woodpecker",
+    description: "戴胜最著名的特征是头顶有一簇可以展开和收拢的羽冠，展开时如同折扇般美丽。它们以地面昆虫和幼虫为食，飞行姿态如同蝴蝶般上下起伏。",
+    tags: ["羽冠", "暖色", "地面觅食"],
+    wiki: "https://zh.wikipedia.org/wiki/%E6%88%B4%E8%83%9C",
+    image: "https://images.unsplash.com/photo-1444469084074-bae5cfec422e?w=600&h=400&fit=crop"
+  },
+  {
+    id: 21,
+    name: "红腹锦鸡",
+    scientificName: "Chrysolophus pictus",
+    category: "songbird",
+    description: "红腹锦鸡是中国特有的珍稀雉类，雄鸟羽毛五彩斑斓，头部有金黄色丝状羽冠，光彩夺目，被誉为'鸟中皇后'。",
+    tags: ["五彩", "珍稀", "中国特有"],
+    wiki: "https://zh.wikipedia.org/wiki/%E7%BA%A2%E8%85%B9%E9%94%A6%E9%B8%9F",
+    image: "https://images.unsplash.com/photo-1504695377751-83c62543e74b?w=600&h=400&fit=crop"
+  },
+
+  {
+    id: 23,
+    name: "小太平鸟",
+    scientificName: "Bombycilla japonica",
+    category: "songbird",
+    description: "小太平鸟体态优雅，头部有耸立的羽冠，次级飞羽末端有一块鲜红色的滴状斑。它们喜群居，冬季常集成数十只的大群。",
+    tags: ["群居", "羽冠", "冬季"],
+    wiki: "https://zh.wikipedia.org/wiki/%E5%B0%8F%E5%A4%AA%E5%B9%B3%E9%B8%9F",
+    image: "https://images.unsplash.com/photo-1596864419769-1eebba1ef348?w=600&h=400&fit=crop"
+  },
+  {
+    id: 24,
+    name: "灰喜鹊",
+    scientificName: "Cyanopica cyanus",
+    category: "songbird",
+    description: "灰喜鹊体型比喜鹊小，身体主要为蓝灰色，尾巴很长。它们是极具社会性的鸟类，成群活动时会有'哨兵'站在高处放哨。",
+    tags: ["聪明", "群居", "灰蓝色"],
+    wiki: "https://zh.wikipedia.org/wiki/%E7%81%B0%E5%96%9C%E9%B9%A6",
+    image: "https://images.unsplash.com/photo-1511793307447-39a70fce47f1?w=600&h=400&fit=crop"
+  },
+  {
+    id: 25,
+    name: "红头潜鸭",
+    scientificName: "Aythya ferina",
+    category: "water",
+    description: "红头潜鸭是中型潜水鸭，雄鸟头部呈鲜艳的红褐色，胸部黑色，背部灰白。它们善于潜水觅食，主要以水生植物和小型水生动物为食，常成群活动于湖泊和河流中。",
+    tags: ["潜水鸭", "红头", "群居"],
+    wiki: "https://zh.wikipedia.org/wiki/%E7%BA%A2%E5%A4%B4%E6%BD%9C%E9%B8%AD",
+    image: "https://images.unsplash.com/photo-1504716223442-a5bef4a9812d?w=600&h=400&fit=crop&q=80"
+  },
+  {
+    id: 26,
+    name: "大白鹭",
+    scientificName: "Ardea alba",
+    category: "water",
+    description: "大白鹭是鹭科中体型最大的种类，全身洁白，颈部呈S形弯曲，腿长而黑。它们优雅地站立于浅水中，以鱼类、蛙类和小型水生动物为食，是湿地生态系统的重要成员。",
+    tags: ["大型", "洁白", "优雅"],
+    wiki: "https://zh.wikipedia.org/wiki/%E5%A4%A7%E7%99%BD%E9%B9%AD",
+    image: "https://images.unsplash.com/photo-1578662996442-48f60103e01e?w=600&h=400&fit=crop&q=80"
+  },
+  {
+    id: 27,
+    name: "白鹇",
+    scientificName: "Lophura nycthemera",
+    category: "songbird",
+    description: "白鹇是中国特有的珍稀雉科鸟类，雄鸟上体白色，下体黑色，脸部鲜红，尾羽修长。它们栖息于亚热带常绿阔叶林中，以植物果实、种子和昆虫为食，被誉为'山中仙子'。",
+    tags: ["珍稀", "白羽", "中国特有"],
+    wiki: "https://zh.wikipedia.org/wiki/%E7%99%BD%E9%B9%87",
+    image: "https://images.unsplash.com/photo-1552728089-57bdde30beb8?w=600&h=400&fit=crop"
+  },
+  {
+    id: 28,
+    name: "绿头鸭",
+    scientificName: "Anas platyrhynchos",
+    category: "water",
+    description: "绿头鸭是最常见的野鸭之一，雄鸟头部呈金属光泽的绿色，颈部有白色环带。它们适应力极强，广泛分布于湖泊、河流和湿地，是家鸭的野生祖先。",
+    tags: ["常见", "绿头", "野生祖先"],
+    wiki: "https://zh.wikipedia.org/wiki/%E7%BB%BF%E5%A4%B4%E9%B8%AD",
+    image: "https://images.unsplash.com/photo-1504716223442-a5bef4a9812d?w=600&h=400&fit=crop&q=80"
+  }
+];
+
+const categoryMap = {
+  all: "全部",
+  songbird: "鸣禽",
+  water: "水禽",
+  raptor: "猛禽",
+  woodpecker: "啄木鸟"
+};
+
+let currentAudioBlob = null;
+let currentBirdId = null;
+
+// ============ 彩色羽毛 ============
+function initFeathers() {
+  const container = document.getElementById('featherContainer');
+  const featherColors = ['feather-red', 'feather-blue', 'feather-green', 'feather-yellow', 
+                         'feather-purple', 'feather-orange', 'feather-pink', 'feather-cyan', 
+                         'feather-gold', 'feather-lime'];
+  const featherIcons = ['fa-feather', 'fa-feather-alt', 'fa-leaf'];
+  
+  function createFeather() {
+    const feather = document.createElement('div');
+    feather.className = 'feather ' + featherColors[Math.floor(Math.random() * featherColors.length)];
+    feather.innerHTML = '<i class="fas ' + featherIcons[Math.floor(Math.random() * featherIcons.length)] + '"></i>';
+    
+    // 随机位置
+    feather.style.left = Math.random() * 100 + '%';
+    
+    // 随机大小
+    const size = Math.random() * 20 + 20; // 20-40px
+    feather.style.fontSize = size + 'px';
+    
+    // 随机动画时长 (8-20秒)
+    const duration = Math.random() * 12 + 8;
+    feather.style.animationDuration = duration + 's';
+    
+    // 随机延迟
+    feather.style.animationDelay = Math.random() * 5 + 's';
+    
+    // 随机旋转方向
+    const rotateDirection = Math.random() > 0.5 ? 1 : -1;
+    feather.style.setProperty('--rotate-dir', rotateDirection);
+    
+    container.appendChild(feather);
+    
+    // 动画结束后移除
+    setTimeout(() => {
+      feather.remove();
+    }, duration * 1000);
+  }
+  
+  // 初始创建一些羽毛
+  for (let i = 0; i < 15; i++) {
+    setTimeout(createFeather, i * 300);
+  }
+  
+  // 持续创建新羽毛
+  setInterval(createFeather, 1500);
+}
+
+// ============ 粒子背景 ============
+function initParticles() {
+  const canvas = document.getElementById('particles-canvas');
+  const ctx = canvas.getContext('2d');
+  
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+  
+  const particles = [];
+  const particleCount = 50;
+  
+  for (let i = 0; i < particleCount; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      vx: (Math.random() - 0.5) * 0.5,
+      vy: (Math.random() - 0.5) * 0.5,
+      radius: Math.random() * 3 + 1,
+      opacity: Math.random() * 0.5 + 0.2
+    });
+  }
+  
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      
+      if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+      if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+      
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(26, 95, 74, ${p.opacity})`;
+      ctx.fill();
+    });
+    
+    // 连线
+    particles.forEach((p1, i) => {
+      particles.slice(i + 1).forEach(p2 => {
+        const dx = p1.x - p2.x;
+        const dy = p1.y - p2.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < 150) {
+          ctx.beginPath();
+          ctx.moveTo(p1.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.strokeStyle = `rgba(26, 95, 74, ${0.1 * (1 - dist / 150)})`;
+          ctx.stroke();
+        }
+      });
+    });
+    
+    requestAnimationFrame(animate);
+  }
+  animate();
+}
+
+// ============ 初始化 ============
+document.addEventListener('DOMContentLoaded', () => {
+  initParticles();
+  initFeathers();
+  renderFilters();
+  renderBirds(birdsDatabase);
+  loadHistory();
+  bindEvents();
+  
+  // 导航栏滚动效果
+  window.addEventListener('scroll', () => {
+    const navbar = document.getElementById('navbar');
+    navbar.classList.toggle('scrolled', window.scrollY > 50);
+    
+    // 导航高亮
+    const sections = document.querySelectorAll('section[id]');
+    let current = '';
+    sections.forEach(section => {
+      const sectionTop = section.offsetTop - 200;
+      if (window.scrollY >= sectionTop) {
+        current = section.id;
+      }
+    });
+    
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.classList.remove('active');
+      if (link.getAttribute('href') === '#' + current) {
+        link.classList.add('active');
+      }
+    });
+  });
+});
+
+// ============ 渲染过滤器 ============
+function renderFilters() {
+  const container = document.getElementById('birdsFilter');
+  container.innerHTML = Object.entries(categoryMap).map(([key, label]) => `
+    <button class="filter-btn ${key === 'all' ? 'active' : ''}" data-filter="${key}">
+      ${label}
+    </button>
+  `).join('');
+  
+  container.addEventListener('click', (e) => {
+    if (!e.target.classList.contains('filter-btn')) return;
+    
+    container.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    e.target.classList.add('active');
+    
+    const filter = e.target.dataset.filter;
+    const filtered = filter === 'all' 
+      ? birdsDatabase 
+      : birdsDatabase.filter(b => b.category === filter);
+    renderBirds(filtered);
+  });
+}
+
+// ============ 生成鸟类 SVG 占位图 ============
+function generateBirdSVG(name) {
+  const colors = ['#1a5f4a', '#2d8a6e', '#0d3d2f', '#27ae60', '#16a085', '#2980b9'];
+  const bgColor = colors[name.length % colors.length];
+  return `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400"><rect fill="${bgColor}" width="600" height="400"/><text x="50%" y="50%" font-family="Arial,sans-serif" font-size="48" fill="white" text-anchor="middle" dominant-baseline="middle">${name}</text><text x="50%" y="65%" font-family="Arial,sans-serif" font-size="24" fill="rgba(255,255,255,0.7)" text-anchor="middle" dominant-baseline="middle">🐦</text></svg>`)}`;
+}
+
+// ============ 渲染图鉴 ============
+function renderBirds(birds) {
+  const grid = document.getElementById('birdsGrid');
+  
+  if (birds.length === 0) {
+    grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #999; padding: 40px;">暂无数据</p>';
+    return;
+  }
+  
+  grid.innerHTML = birds.map(bird => {
+    const fallbackImage = generateBirdSVG(bird.name);
+    return `
+    <div class="bird-card" onclick="openBirdModal(${bird.id})">
+      <div class="bird-card-img">
+        <img src="${bird.image}" alt="${bird.name}" loading="lazy" 
+          onerror="this.onerror=null; this.src='${fallbackImage}'">
+        <span class="bird-card-badge">${categoryMap[bird.category]}</span>
+      </div>
+      <div class="bird-card-body">
+        <h4>${bird.name}</h4>
+        <p class="scientific">${bird.scientificName}</p>
+        <p>${bird.description.substring(0, 60)}...</p>
+        <span class="bird-card-link">
+          <i class="fas fa-external-link-alt"></i> 查看详情 & 维基百科
+        </span>
+      </div>
+    </div>
+  `}).join('');
+}
+
+// ============ 鸟类详情弹窗 ============
+function openBirdModal(id) {
+  const bird = birdsDatabase.find(b => b.id === id);
+  if (!bird) return;
+  
+  currentBirdId = id;
+  
+  // 设置弹窗图片，添加错误处理
+  const modalImg = document.getElementById('modalImg');
+  modalImg.src = bird.image;
+  modalImg.onerror = function() {
+    this.onerror = null;
+    this.src = generateBirdSVG(bird.name);
+  };
+  
+  document.getElementById('modalName').textContent = bird.name;
+  document.getElementById('modalSci').textContent = bird.scientificName;
+  document.getElementById('modalDesc').textContent = bird.description;
+  document.getElementById('modalTags').innerHTML = bird.tags.map(tag => 
+    `<span class="tag">${tag}</span>`
+  ).join('');
+  
+  // 构建维基百科链接 - 使用鸟类名称自动编码
+  const wikiUrl = 'https://zh.wikipedia.org/wiki/' + encodeURIComponent(bird.name);
+  document.getElementById('modalWiki').href = wikiUrl;
+  
+  document.getElementById('birdModal').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('birdModal').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function closeModalOnOverlay(event) {
+  if (event.target.classList.contains('modal-overlay')) {
+    closeModal();
+  }
+}
+
+// ============ 事件绑定 ============
+function bindEvents() {
+  const uploadArea = document.getElementById('uploadArea');
+  const audioInput = document.getElementById('audioInput');
+  
+  // 上传区域点击
+  uploadArea.addEventListener('click', (e) => {
+    if (e.target.closest('.btn-ghost') || e.target === uploadArea) {
+      audioInput.click();
+    }
+  });
+  
+  // 文件选择
+  audioInput.addEventListener('change', (e) => {
+    if (e.target.files[0]) {
+      processAudio(e.target.files[0]);
+    }
+  });
+  
+  // 拖拽上传
+  uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.classList.add('dragover');
+  });
+  
+  uploadArea.addEventListener('dragleave', () => {
+    uploadArea.classList.remove('dragover');
+  });
+  
+  uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+    if (e.dataTransfer.files[0]) {
+      processAudio(e.dataTransfer.files[0]);
+    }
+  });
+  
+  // 移除音频
+  document.getElementById('removeAudio').addEventListener('click', resetIdentification);
+  
+  // 开始识别
+  document.getElementById('recognizeBtn').addEventListener('click', startRecognition);
+}
+
+// ============ 处理音频 ============
+function processAudio(file) {
+  currentAudioBlob = file;
+  const audioPlayer = document.getElementById('audioPlayer');
+  audioPlayer.src = URL.createObjectURL(file);
+  document.getElementById('fileName').textContent = file.name;
+  
+  showElement('audioPreview');
+  hideElement('uploadArea');
+  hideElement('resultContainer');
+}
+
+// ============ 基于文件特征生成确定性识别结果 ============
+function getDeterministicBird(file) {
+  // 使用文件名和文件大小生成一个确定的哈希值
+  const hashInput = file.name + file.size;
+  let hash = 0;
+  for (let i = 0; i < hashInput.length; i++) {
+    const char = hashInput.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // 转换为32位整数
+  }
+  
+  // 使用哈希值选择鸟类（确保结果在有效范围内）
+  const birdIndex = Math.abs(hash) % birdsDatabase.length;
+  const bird = birdsDatabase[birdIndex];
+  
+  // 基于文件大小生成置信度（60-98%），相同文件大小范围产生相近置信度
+  const sizeHash = file.size % 38; // 0-37
+  const confidence = 60 + sizeHash; // 60-97%
+  
+  return { bird, confidence };
+}
+
+// ============ 开始识别 ============
+function startRecognition() {
+  if (!currentAudioBlob) {
+    alert('请先上传音频文件');
+    return;
+  }
+  
+  hideElement('audioPreview');
+  showElement('loadingState');
+  hideElement('resultContainer');
+  
+  // 模拟识别过程（2秒）
+  setTimeout(() => {
+    const { bird, confidence } = getDeterministicBird(currentAudioBlob);
+    displayResult(bird, confidence);
+    saveHistory(bird, confidence);
+  }, 2000);
+}
+
+// ============ 展示结果 ============
+function displayResult(bird, confidence) {
+  hideElement('loadingState');
+  showElement('resultContainer');
+  
+  currentBirdId = bird.id;
+  // 设置结果图片，添加错误处理
+  const resultImg = document.getElementById('resultImage');
+  resultImg.src = bird.image;
+  resultImg.onerror = function() {
+    this.onerror = null;
+    this.src = generateBirdSVG(bird.name);
+  };
+  
+  document.getElementById('birdName').textContent = bird.name;
+  document.getElementById('scientificName').textContent = bird.scientificName;
+  document.getElementById('confidenceFill').style.width = confidence + '%';
+  document.getElementById('confidenceText').textContent = confidence + '%';
+  document.getElementById('birdDescription').textContent = bird.description;
+  document.getElementById('birdTags').innerHTML = bird.tags.map(tag => 
+    `<span class="tag">${tag}</span>`
+  ).join('');
+  
+  // 滚动到结果
+  document.getElementById('resultContainer').scrollIntoView({ 
+    behavior: 'smooth', 
+    block: 'center' 
+  });
+}
+
+// ============ 重置识别 ============
+function resetIdentification() {
+  currentAudioBlob = null;
+  currentBirdId = null;
+  document.getElementById('audioPlayer').src = '';
+  document.getElementById('audioInput').value = '';
+  
+  hideElement('audioPreview');
+  hideElement('resultContainer');
+  hideElement('loadingState');
+  showElement('uploadArea');
+}
+
+// ============ 历史记录 ============
+function saveHistory(bird, confidence) {
+  const entry = {
+    id: Date.now(),
+    birdId: bird.id,
+    birdName: bird.name,
+    scientificName: bird.scientificName,
+    confidence: confidence,
+    time: new Date().toLocaleString('zh-CN')
+  };
+  
+  const history = JSON.parse(localStorage.getItem('birdHistory') || '[]');
+  history.unshift(entry);
+  if (history.length > 50) history.length = 50;
+  
+  localStorage.setItem('birdHistory', JSON.stringify(history));
+  loadHistory();
+}
+
+function loadHistory() {
+  const history = JSON.parse(localStorage.getItem('birdHistory') || '[]');
+  const container = document.getElementById('historyList');
+  const emptyMsg = document.getElementById('historyEmpty');
+  const clearBtn = document.getElementById('clearHistoryBtn');
+  
+  if (history.length === 0) {
+    container.innerHTML = '<div id="historyEmpty" class="history-empty" style="display:block;"><i class="fas fa-history"></i><br>暂无识别记录，快去上传音频试试吧！</div>';
+    clearBtn.classList.add('hidden');
+    return;
+  }
+  
+  clearBtn.classList.remove('hidden');
+  
+  container.innerHTML = history.map((item, index) => `
+    <div class="history-item" onclick="openHistoryBird(${item.birdId})">
+      <div class="history-rank">${index + 1}</div>
+      <div class="history-info">
+        <h4>${item.birdName}</h4>
+        <p>${item.scientificName} · ${item.time}</p>
+      </div>
+      <div class="history-confidence">${item.confidence}%</div>
+      <button class="history-delete" onclick="event.stopPropagation(); deleteHistoryItem(${item.id})" title="删除此记录">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  `).join('');
+}
+
+function deleteHistoryItem(id) {
+  const history = JSON.parse(localStorage.getItem('birdHistory') || '[]');
+  const newHistory = history.filter(item => String(item.id) !== String(id));
+  localStorage.setItem('birdHistory', JSON.stringify(newHistory));
+  loadHistory();
+}
+
+function openHistoryBird(birdId) {
+  const bird = birdsDatabase.find(b => b.id === birdId);
+  if (bird) {
+    openBirdModal(birdId);
+  } else {
+    alert('未找到该鸟类的详细信息');
+  }
+}
+
+function clearHistory() {
+  if (!confirm('确定要清空所有识别历史吗？')) return;
+  localStorage.removeItem('birdHistory');
+  loadHistory();
+}
+
+// ============ 工具函数 ============
+function showElement(id) {
+  document.getElementById(id).classList.remove('hidden');
+}
+
+function hideElement(id) {
+  document.getElementById(id).classList.add('hidden');
+}
+
+function scrollToSection(id) {
+  document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+
+</body>
+</html>
